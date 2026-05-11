@@ -1,0 +1,100 @@
+[
+  {
+    "id": "preload-oxyd-01",
+    "name": "01 - BALADETA 85-90-140bpm.pdf",
+    "title": "BALADETA 85-90-140bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/01-baladeta-85-90-140bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-02",
+    "name": "02 - CENTRALIA 177bpm.pdf",
+    "title": "CENTRALIA 177bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/02-centralia-177bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-03",
+    "name": "03 - CUENTA ATRÁS 187bpm.pdf",
+    "title": "CUENTA ATRÁS 187bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/03-cuenta-atras-187bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-04",
+    "name": "04 - CUERNOS AL CIELO.pdf",
+    "title": "CUERNOS AL CIELO",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/04-cuernos-al-cielo.pdf"
+  },
+  {
+    "id": "preload-oxyd-05",
+    "name": "05 - DIME HERMANO 138bpm.pdf",
+    "title": "DIME HERMANO 138bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/05-dime-hermano-138bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-06",
+    "name": "06 - EL BRILLO DEL METAL 149bpm.pdf",
+    "title": "EL BRILLO DEL METAL 149bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/06-el-brillo-del-metal-149bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-07",
+    "name": "07 - HIJOS DE LA MAR 130bpm.pdf",
+    "title": "HIJOS DE LA MAR 130bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/07-hijos-de-la-mar-130bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-08",
+    "name": "08 - LA CANCIÓN DEL PIRATA.pdf",
+    "title": "LA CANCIÓN DEL PIRATA",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/08-la-cancion-del-pirata.pdf"
+  },
+  {
+    "id": "preload-oxyd-09",
+    "name": "09 - LLEGO A SU FIN 170bpm.pdf",
+    "title": "LLEGO A SU FIN 170bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/09-llego-a-su-fin-170bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-10",
+    "name": "10 - MAKTUB 167bpm.pdf",
+    "title": "MAKTUB 167bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/10-maktub-167bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-11",
+    "name": "11 - NUNCA SE SABE 160bpm.pdf",
+    "title": "NUNCA SE SABE 160bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/11-nunca-se-sabe-160bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-12",
+    "name": "12 - PANDEMIA 187bpm.pdf",
+    "title": "PANDEMIA 187bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/12-pandemia-187bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-13",
+    "name": "13 - TESTAMENTO 170bpm.pdf",
+    "title": "TESTAMENTO 170bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/13-testamento-170bpm.pdf"
+  },
+  {
+    "id": "preload-oxyd-14",
+    "name": "14 - BIENVENIDOS AL VALHALLA 170bpm.pdf",
+    "title": "BIENVENIDOS AL VALHALLA 170bpm",
+    "type": "application/pdf",
+    "src": "preloaded/oxyd/14-bienvenidos-al-valhalla-170bpm.pdf"
+  }
+]
