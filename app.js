@@ -5,7 +5,7 @@ const STORE_SETS = 'sets';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
-const state = { files: [], sets: [], currentSetId: null, playQueue: [], playIndex: 0, objectUrl: null, viewerDark: false, dragScroll: { active: false, speed: 0, raf: null } };
+const state = { files: [], sets: [], currentSetId: null, playQueue: [], playIndex: 0, objectUrl: null, viewerDark: false, dragEventsBound: false, pointerDrag: null, dragScroll: { active: false, speed: 0, raf: null } };
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -210,8 +210,8 @@ function renderSetDetail() {
   list.innerHTML = set.items.map((id, idx) => {
     const f = state.files.find(x => x.id === id);
     if (!f) return `<article class="song-row" data-file-id="${id}"><div class="drag-handle">☰</div><div class="row-main"><strong>Arxiu no trobat</strong><small>Potser s'ha eliminat de la biblioteca</small></div><button class="mini-btn delete-btn remove-from-set" type="button">Treure</button></article>`;
-    return `<article class="song-row" draggable="true" data-file-id="${f.id}">
-      <div class="drag-handle" title="Arrossega per reordenar">☰</div>
+    return `<article class="song-row" draggable="false" data-file-id="${f.id}">
+      <div class="drag-handle" title="Arrossega per reordenar" aria-label="Arrossega per reordenar">☰</div>
       <div class="file-icon">${fileIcon(f.type, f.name)}</div>
       <div class="row-main"><strong>${idx + 1}. ${escapeHTML(f.title || cleanTitle(f.name))}</strong><small>${escapeHTML(f.name)}</small></div>
       <div class="row-actions">
@@ -288,34 +288,80 @@ function showScreen(name) {
 }
 
 function setupDragSort() {
-  const rows = $$('#setItemsList .song-row');
-  rows.forEach(row => {
-    row.addEventListener('dragstart', e => {
-      row.classList.add('dragging');
-      startAutoScroll();
-      if (e.dataTransfer) {
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', row.dataset.fileId);
-      }
-    });
-    row.addEventListener('dragend', () => {
-      row.classList.remove('dragging');
-      stopAutoScroll();
-      persistSortFromDOM();
-    });
-    row.addEventListener('dragover', e => {
-      e.preventDefault();
-      updateAutoScroll(e.clientY);
-      const dragging = $('.dragging');
-      const list = $('#setItemsList');
-      if (!dragging || !list) return;
-      const after = getDragAfterElement(list, e.clientY);
-      if (!after) list.appendChild(dragging); else list.insertBefore(dragging, after);
-    });
+  const list = $('#setItemsList');
+  if (!list) return;
+
+  // Important: no fem servir el drag & drop natiu del navegador.
+  // En mòbil pot mostrar el “+” verd i intentar obrir Google.
+  // Aquest arrossegament és propi de l'app i funciona amb dit, ratolí o llapis.
+  list.querySelectorAll('.song-row').forEach(row => {
+    row.setAttribute('draggable', 'false');
+    row.addEventListener('dragstart', e => e.preventDefault());
+    const handle = row.querySelector('.drag-handle');
+    if (!handle) return;
+    handle.addEventListener('pointerdown', startPointerSort);
   });
-  document.addEventListener('dragover', e => {
-    if ($('.dragging')) updateAutoScroll(e.clientY);
-  });
+
+  if (!state.dragEventsBound) {
+    state.dragEventsBound = true;
+    document.addEventListener('pointermove', movePointerSort, { passive: false });
+    document.addEventListener('pointerup', endPointerSort, { passive: false });
+    document.addEventListener('pointercancel', endPointerSort, { passive: false });
+    document.addEventListener('dragstart', e => {
+      if (e.target.closest?.('.song-row, .drag-handle')) e.preventDefault();
+    });
+    document.addEventListener('drop', e => {
+      if ($('.song-row.dragging')) e.preventDefault();
+    });
+  }
+}
+
+function startPointerSort(e) {
+  if (e.button !== undefined && e.button !== 0) return;
+  const row = e.currentTarget.closest('.song-row');
+  const list = $('#setItemsList');
+  if (!row || !list) return;
+  e.preventDefault();
+  e.stopPropagation();
+  row.classList.add('dragging');
+  row.style.touchAction = 'none';
+  row.style.userSelect = 'none';
+  try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch (_) {}
+  state.pointerDrag = {
+    row,
+    list,
+    pointerId: e.pointerId,
+    startY: e.clientY,
+    lastY: e.clientY,
+    moved: false
+  };
+  document.body.classList.add('sorting-active');
+  startAutoScroll();
+  updateAutoScroll(e.clientY);
+}
+
+function movePointerSort(e) {
+  const drag = state.pointerDrag;
+  if (!drag || (drag.pointerId !== undefined && e.pointerId !== drag.pointerId)) return;
+  e.preventDefault();
+  drag.lastY = e.clientY;
+  if (Math.abs(e.clientY - drag.startY) > 4) drag.moved = true;
+  updateAutoScroll(e.clientY);
+  const after = getDragAfterElement(drag.list, e.clientY);
+  if (!after) drag.list.appendChild(drag.row); else drag.list.insertBefore(drag.row, after);
+}
+
+async function endPointerSort(e) {
+  const drag = state.pointerDrag;
+  if (!drag || (e?.pointerId !== undefined && drag.pointerId !== undefined && e.pointerId !== drag.pointerId)) return;
+  e?.preventDefault?.();
+  drag.row.classList.remove('dragging');
+  drag.row.style.touchAction = '';
+  drag.row.style.userSelect = '';
+  state.pointerDrag = null;
+  document.body.classList.remove('sorting-active');
+  stopAutoScroll();
+  await persistSortFromDOM();
 }
 
 function startAutoScroll() {
@@ -336,6 +382,7 @@ function updateAutoScroll(clientY) {
 
 function tickAutoScroll() {
   if (!state.dragScroll.active) return;
+  if (state.pointerDrag) updateAutoScroll(state.pointerDrag.lastY);
   if (state.dragScroll.speed) window.scrollBy(0, state.dragScroll.speed);
   state.dragScroll.raf = requestAnimationFrame(tickAutoScroll);
 }

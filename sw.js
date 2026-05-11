@@ -1,4 +1,4 @@
-const CACHE = 'partitures-shell-v7-clean-setlist2026';
+const CACHE = 'partitures-shell-v8-pointer-sort';
 const ASSETS = [
   './',
   './index.html',

@@ -97,7 +97,7 @@ h3 { font-size: 1.05rem; }
 .row-actions { display: flex; gap: 6px; }
 .mini-btn { border: 1px solid var(--line); background: var(--panel-solid); color: var(--text); border-radius: 12px; padding: 8px 10px; font-weight: 800; }
 .delete-btn { color: var(--danger); }
-.drag-handle { color: var(--muted); font-size: 1.2rem; padding: 8px; touch-action: none; }
+.drag-handle { color: var(--muted); font-size: 1.2rem; padding: 8px; touch-action: none; user-select: none; -webkit-user-drag: none; }
 .song-row.dragging { opacity: .55; transform: scale(.99); }
 .empty { color: var(--muted); border: 1px dashed var(--line); border-radius: 18px; padding: 18px; text-align: center; }
 .bottom-nav {
@@ -266,7 +266,10 @@ body {
 .song-row {
   grid-template-columns: auto auto 1fr auto;
   transition: transform .12s ease, border-color .12s ease, background .12s ease;
+  -webkit-user-drag: none;
 }
+.sorting-active { overscroll-behavior: contain; }
+.sorting-active .song-row, .sorting-active .drag-handle { touch-action: none; user-select: none; -webkit-user-drag: none; }
 .song-row.dragging {
   opacity: .78;
   transform: scale(1.015);
@@ -284,6 +287,9 @@ body {
   border: 1px solid rgba(255, 106, 0, .20);
   color: var(--brand-2);
   cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 .drag-handle:active { cursor: grabbing; }
 .move-actions { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
