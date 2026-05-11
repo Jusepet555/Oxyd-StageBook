@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ca">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#080101" />
+  <meta name="description" content="Öxyd StageBook: organitza repertoris, partitures i lletres per tocar a l’escenari." />
+  <title>Öxyd StageBook</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css?v=7" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar brand-topbar">
+      <div class="brand-block">
+        <img src="oxyd-logo.png" alt="Logo Öxyd" class="brand-mark" />
+        <div>
+          <p class="eyebrow">App per a músics</p>
+          <h1>Öxyd StageBook</h1>
+        </div>
+      </div>
+      <button id="themeToggle" class="icon-btn" type="button" aria-label="Canviar mode fosc">🌙</button>
+    </header>
+
+    <main class="screen active" id="screen-home">
+      <section class="hero-card stage-hero">
+        <div class="hero-copy">
+          <img src="oxyd-full-logo.png" alt="Logo complet Öxyd" class="hero-logo hero-logo-full" />
+          <p class="eyebrow">Mode escenari</p>
+          <h2>El teu repertori, preparat per sortir a tocar</h2>
+          <p>PDF, imatges i textos. Inclou el repertori base d’Öxyd precarregat i pots afegir-ne més quan vulguis.</p>
+        </div>
+        <label class="primary-btn file-btn">
+          Importar arxius
+          <input id="fileInput" type="file" multiple accept="application/pdf,image/*,.txt,.md,.text,.doc,.docx" />
+        </label>
+      </section>
+
+      <section class="quick-grid">
+        <button class="quick-card" data-nav="library" type="button">
+          <span>🎼</span>
+          <strong>Biblioteca</strong>
+          <small id="libraryCount">0 arxius</small>
+        </button>
+        <button class="quick-card" data-nav="sets" type="button">
+          <span>📋</span>
+          <strong>Llistes</strong>
+          <small id="setCount">0 llistes</small>
+        </button>
+        <button class="quick-card" id="importSetBtn" type="button">
+          <span>📥</span>
+          <strong>Importar repertori</strong>
+          <small>Fitxer .stagebook o .json</small>
+        </button>
+      </section>
+
+      <section class="panel">
+        <div class="section-title">
+          <h3>Últimes llistes</h3>
+          <button class="text-btn" data-nav="sets" type="button">Veure totes</button>
+        </div>
+        <div id="recentSets" class="empty">Encara no has creat cap llista.</div>
+      </section>
+    </main>
+
+    <main class="screen" id="screen-library">
+      <section class="panel sticky-panel">
+        <div class="section-title">
+          <h2>Biblioteca</h2>
+          <label class="secondary-btn small file-btn">
+            + Afegir
+            <input id="fileInputLibrary" type="file" multiple accept="application/pdf,image/*,.txt,.md,.text,.doc,.docx" />
+          </label>
+        </div>
+        <input id="searchLibrary" class="search" type="search" placeholder="Buscar cançó o arxiu..." />
+      </section>
+      <section id="libraryList" class="list"></section>
+    </main>
+
+    <main class="screen" id="screen-sets">
+      <section class="panel sticky-panel">
+        <div class="section-title">
+          <h2>Llistes</h2>
+          <button id="newSetBtn" class="primary-btn small" type="button">+ Nova</button>
+        </div>
+        <p class="muted">Crea repertoris per actuacions, assajos o bolos. Les pots editar i reordenar quan vulguis.</p>
+      </section>
+      <section id="setsList" class="list"></section>
+    </main>
+
+    <main class="screen" id="screen-set-detail">
+      <section class="panel sticky-panel">
+        <button class="back-btn" data-nav="sets" type="button">← Tornar</button>
+        <div class="set-header-edit">
+          <input id="setNameInput" class="title-input" type="text" />
+          <button id="saveSetNameBtn" class="secondary-btn small" type="button">Desar</button>
+        </div>
+        <div class="toolbar-row">
+          <button id="addToSetBtn" class="primary-btn small" type="button">+ Afegir cançons</button>
+          <button id="playSetBtn" class="secondary-btn small" type="button">▶ Tocar</button>
+          <button id="shareSetBtn" class="secondary-btn small" type="button">Exportar repertori</button>
+        </div>
+        <p class="reorder-help">Per reordenar: arrossega amb la icona ☰. Si vas cap amunt o cap avall, la pantalla es mourà sola. També pots usar els botons ↑ ↓ ⤒ ⤓.</p>
+      </section>
+      <section id="setItemsList" class="list sortable-list"></section>
+    </main>
+
+    <main class="screen viewer-screen" id="screen-viewer">
+      <header class="viewer-topbar">
+        <button id="closeViewerBtn" class="viewer-btn" type="button">←</button>
+        <div class="viewer-meta">
+          <strong id="viewerTitle">Partitura</strong>
+          <small id="viewerPosition">1 / 1</small>
+        </div>
+        <button id="viewerReadModeBtn" class="viewer-btn wide-viewer-btn" type="button" title="Activar o desactivar el mode fosc del visor">◐</button>
+        <button id="viewerFullscreenBtn" class="viewer-btn" type="button">⛶</button>
+      </header>
+      <section id="viewerContent" class="viewer-content"></section>
+      <footer class="viewer-controls">
+        <button id="prevBtn" class="viewer-control-btn" type="button">← Anterior</button>
+        <button id="nextBtn" class="viewer-control-btn" type="button">Següent →</button>
+      </footer>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegació principal">
+      <button data-nav="home" class="active" type="button">🏠<span>Inici</span></button>
+      <button data-nav="library" type="button">🎼<span>Biblioteca</span></button>
+      <button data-nav="sets" type="button">📋<span>Llistes</span></button>
+    </nav>
+  </div>
+
+  <dialog id="addDialog" class="dialog">
+    <form method="dialog">
+      <div class="section-title">
+        <h3>Afegir a la llista</h3>
+        <button class="icon-btn" value="cancel" type="submit">✕</button>
+      </div>
+      <input id="dialogSearch" class="search" type="search" placeholder="Buscar a la biblioteca..." />
+      <div id="dialogLibrary" class="dialog-list"></div>
+      <button id="dialogDoneBtn" class="primary-btn full" value="done" type="submit">Fet</button>
+    </form>
+  </dialog>
+
+  <input id="importSetInput" type="file" hidden accept="application/json,.json,.stagebook,*/*" />
+  <script src="app.js?v=7"></script>
+</body>
+</html>
