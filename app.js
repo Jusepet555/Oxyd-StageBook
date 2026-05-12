@@ -5,7 +5,7 @@ const STORE_SETS = 'sets';
 
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => [...document.querySelectorAll(sel)];
-const state = { files: [], sets: [], currentSetId: null, playQueue: [], playIndex: 0, objectUrl: null, viewerDark: false, dragEventsBound: false, pointerDrag: null, dragScroll: { active: false, speed: 0, raf: null } };
+const state = { files: [], sets: [], currentSetId: null, playQueue: [], playIndex: 0, objectUrl: null, viewerDark: false, dragEventsBound: false, pointerDrag: null, viewerRenderToken: 0, dragScroll: { active: false, speed: 0, raf: null } };
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -62,7 +62,7 @@ function cleanTitle(name) { return name.replace(/\.[^.]+$/, '').replace(/[-_]/g,
 
 
 const PRELOADED_SET_ID = 'set-oxyd-concert';
-const FINAL_DATA_VERSION = 'oxyd-final-v7-setlist2026';
+const FINAL_DATA_VERSION = 'oxyd-final-v10-setlist2026-ordre-concert';
 const PRELOADED_FILES = [
   { id: 'preload-oxyd-01', name: '01 - BALADETA 85-90-140bpm.pdf', title: 'BALADETA 85-90-140bpm', type: 'application/pdf', src: 'preloaded/oxyd/01-baladeta-85-90-140bpm.pdf' },
   { id: 'preload-oxyd-02', name: '02 - CENTRALIA 177bpm.pdf', title: 'CENTRALIA 177bpm', type: 'application/pdf', src: 'preloaded/oxyd/02-centralia-177bpm.pdf' },
@@ -127,7 +127,22 @@ async function seedPreloadedRepertoire() {
 
     const allSets = await getAll(STORE_SETS);
     const existingSet = allSets.find(s => s.id === PRELOADED_SET_ID);
-    const orderedIds = PRELOADED_FILES.map(f => f.id);
+    const orderedIds = [
+      'preload-oxyd-02', // CENTRALIA
+      'preload-oxyd-05', // DIME HERMANO
+      'preload-oxyd-03', // CUENTA ATRÁS
+      'preload-oxyd-12', // PANDEMIA
+      'preload-oxyd-01', // BALADETA
+      'preload-oxyd-14', // BIENVENIDOS AL VALHALLA
+      'preload-oxyd-07', // HIJOS DE LA MAR
+      'preload-oxyd-13', // TESTAMENTO
+      'preload-oxyd-11', // NUNCA SE SABE
+      'preload-oxyd-06', // EL BRILLO DEL METAL
+      'preload-oxyd-09', // LLEGÓ A SU FIN
+      'preload-oxyd-08', // LA CANCIÓN DEL PIRATA
+      'preload-oxyd-04', // CUERNOS AL CIELO
+      'preload-oxyd-10'  // MAKTUB
+    ];
     if (!existingSet) {
       await put(STORE_SETS, {
         id: PRELOADED_SET_ID,
@@ -444,26 +459,116 @@ function applyViewerMode() {
   }
 }
 
+const PDFJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER_URL = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let pdfJsPromise = null;
+
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const existing = [...document.scripts].find(script => script.src === src);
+    if (existing) {
+      if (window.pdfjsLib) resolve();
+      else existing.addEventListener('load', resolve, { once: true });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+async function ensurePdfJs() {
+  if (window.pdfjsLib) return window.pdfjsLib;
+  if (!pdfJsPromise) {
+    pdfJsPromise = loadScriptOnce(PDFJS_URL).then(() => {
+      if (!window.pdfjsLib) throw new Error('PDF.js no s’ha carregat');
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER_URL;
+      return window.pdfjsLib;
+    });
+  }
+  return pdfJsPromise;
+}
+
+async function renderPdfCanvas(file, content, token) {
+  content.innerHTML = '<div class="pdf-loading">Carregant PDF…</div>';
+  try {
+    const pdfjsLib = await ensurePdfJs();
+    if (token !== state.viewerRenderToken) return;
+    const data = await file.blob.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data }).promise;
+    if (token !== state.viewerRenderToken) return;
+
+    content.innerHTML = '<div class="pdf-pages" id="pdfPages"></div>';
+    const pagesEl = $('#pdfPages');
+    const availableWidth = Math.max(320, content.clientWidth - 22);
+
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      if (token !== state.viewerRenderToken) return;
+      const page = await pdf.getPage(pageNum);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const scale = Math.min(Math.max(availableWidth / baseViewport.width, 0.75), 2.4);
+      const viewport = page.getViewport({ scale });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      canvas.width = Math.floor(viewport.width);
+      canvas.height = Math.floor(viewport.height);
+      canvas.className = 'pdf-page-canvas';
+      canvas.setAttribute('aria-label', `Pàgina ${pageNum} de ${pdf.numPages}`);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'pdf-page-wrap';
+      wrap.appendChild(canvas);
+      pagesEl.appendChild(wrap);
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+    }
+  } catch (err) {
+    console.warn('PDF.js no ha pogut renderitzar el PDF. Es fa servir el visor del navegador.', err);
+    if (token !== state.viewerRenderToken) return;
+    content.innerHTML = `
+      <div class="pdf-fallback">
+        <h2>No s’ha pogut carregar el visor intern</h2>
+        <p>Aquest dispositiu pot necessitar obrir el PDF amb el visor del sistema.</p>
+        <a href="${state.objectUrl}" target="_blank" rel="noopener">Obrir PDF</a>
+      </div>
+      <iframe src="${state.objectUrl}#toolbar=0&navpanes=0&view=FitH" title="${escapeHTML(file.name)}"></iframe>`;
+  }
+}
+
 async function showViewer() {
   const file = state.playQueue[state.playIndex]; if (!file) return;
+  const token = ++state.viewerRenderToken;
   if (state.objectUrl) URL.revokeObjectURL(state.objectUrl);
   state.objectUrl = URL.createObjectURL(file.blob);
   $('#viewerTitle').textContent = file.title || cleanTitle(file.name);
   $('#viewerPosition').textContent = `${state.playIndex + 1} / ${state.playQueue.length}`;
   const content = $('#viewerContent');
   const type = file.type || guessMime(file.name);
+
   if (type.includes('pdf') || file.name.toLowerCase().endsWith('.pdf')) {
-    content.innerHTML = `<iframe src="${state.objectUrl}#toolbar=0&navpanes=0&view=FitH" title="${escapeHTML(file.name)}"></iframe>`;
+    content.innerHTML = '<div class="pdf-loading">Carregant PDF…</div>';
+    applyViewerMode();
+    showScreen('viewer');
+    await renderPdfCanvas(file, content, token);
   } else if (type.startsWith('image/')) {
     content.innerHTML = `<img src="${state.objectUrl}" alt="${escapeHTML(file.name)}" />`;
+    applyViewerMode();
+    showScreen('viewer');
   } else if (type.startsWith('text/') || file.name.toLowerCase().match(/\.(txt|md)$/)) {
     const txt = await file.blob.text();
+    if (token !== state.viewerRenderToken) return;
     content.innerHTML = `<article class="text-view">${escapeHTML(txt)}</article>`;
+    applyViewerMode();
+    showScreen('viewer');
   } else {
     content.innerHTML = `<div class="unsupported"><h2>Vista no disponible</h2><p>Aquest arxiu s'ha importat, però el navegador no pot visualitzar directament aquest format. Per a ús d'escenari és millor exportar-lo a PDF, imatge o text pla.</p></div>`;
+    applyViewerMode();
+    showScreen('viewer');
   }
-  applyViewerMode();
-  showScreen('viewer');
 }
 function nextSong(delta) {
   if (!state.playQueue.length) return;

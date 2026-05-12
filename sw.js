@@ -1,4 +1,4 @@
-const CACHE = 'partitures-shell-v8-pointer-sort';
+const CACHE = 'partitures-shell-v10-setlist-ordre';
 const ASSETS = [
   './',
   './index.html',
