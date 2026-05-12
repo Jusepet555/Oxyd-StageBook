@@ -1,4 +1,4 @@
-const CACHE = 'partitures-shell-v10-setlist-ordre';
+const CACHE = 'partitures-shell-v11-pdf-hd-og';
 const ASSETS = [
   './',
   './index.html',

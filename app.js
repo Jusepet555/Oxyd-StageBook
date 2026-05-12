@@ -509,13 +509,20 @@ async function renderPdfCanvas(file, content, token) {
       if (token !== state.viewerRenderToken) return;
       const page = await pdf.getPage(pageNum);
       const baseViewport = page.getViewport({ scale: 1 });
-      const scale = Math.min(Math.max(availableWidth / baseViewport.width, 0.75), 2.4);
+      const scale = Math.min(Math.max(availableWidth / baseViewport.width, 0.75), 2.6);
       const viewport = page.getViewport({ scale });
 
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d', { alpha: false });
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
+
+      // Renderització en alta resolució: evita que a Android es vegi borrós.
+      const outputScale = Math.min(window.devicePixelRatio || 1, 3);
+      canvas.width = Math.floor(viewport.width * outputScale);
+      canvas.height = Math.floor(viewport.height * outputScale);
+      canvas.style.width = `${Math.floor(viewport.width)}px`;
+      canvas.style.height = `${Math.floor(viewport.height)}px`;
+      ctx.setTransform(outputScale, 0, 0, outputScale, 0, 0);
+
       canvas.className = 'pdf-page-canvas';
       canvas.setAttribute('aria-label', `Pàgina ${pageNum} de ${pdf.numPages}`);
 

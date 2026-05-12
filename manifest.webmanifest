@@ -1,6 +1,6 @@
 {
   "name": "Öxyd StageBook",
-  "short_name": "StageBook",
+  "short_name": "Öxyd StageBook",
   "description": "App per organitzar partitures, lletres i repertoris per tocar a l'escenari.",
   "start_url": ".",
   "display": "standalone",
